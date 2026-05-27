@@ -189,7 +189,7 @@ const mockEvents = [
 export function AutonomousOperations() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>(mockEvents);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -199,12 +199,12 @@ export function AutonomousOperations() {
   useEffect(() => {
     const handleAgentEvent = (event: any) => {
       setEvents((prev) => {
-        // Parse date if it's a string from JSON
+        const isMock = prev === mockEvents;
         const parsedEvent = {
           ...event,
-          timestamp: new Date(event.timestamp)
+          timestamp: new Date(event.timestamp || Date.now())
         };
-        return [parsedEvent, ...prev].slice(0, 10);
+        return isMock ? [parsedEvent] : [parsedEvent, ...prev].slice(0, 10);
       });
 
       // Bonus: animate nodes based on event agent

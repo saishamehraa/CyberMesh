@@ -1,6 +1,7 @@
 //src/app/pages/Dashboard.tsx
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { socket } from '../services/socket';
 import { SecurityScore } from '../components/SecurityScore';
 import { MetricCard } from '../components/MetricCard';
 import { ActivityFeed } from '../components/ActivityFeed';
@@ -107,12 +108,69 @@ const threatVolumeData = [
 
 export function Dashboard() {
   const [securityScore, setSecurityScore] = useState(92);
+  const [threats, setThreats] = useState<Threat[]>([]);
+  const [activities, setActivities] = useState<Activity[]>(mockActivities);
 
   useEffect(() => {
+    // 1. Fetch real threats from DB
+    const fetchThreats = async () => {
+      try {
+        const res = await fetch('/api/intel/threats');
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const parsedData = data.slice(0, 3).map((t: any) => ({ 
+            ...t, 
+            publishedDate: new Date(t.publishedDate || t.published_date) 
+          }));
+          setThreats(parsedData);
+        } else {
+          setThreats(mockThreats);
+        }
+      } catch (error) {
+        setThreats(mockThreats);
+      }
+    };
+    fetchThreats();
+
+    // 2. Ambient score fluctuation
     const interval = setInterval(() => {
       setSecurityScore(prev => Math.round(Math.max(70, Math.min(100, prev + (Math.random() - 0.5) * 5))));
     }, 5000);
-    return () => clearInterval(interval);
+
+    // 3. Listen for live socket events to replace mock data
+    const handleAgentEvent = (event: any) => {
+      setActivities(prev => {
+        const isMock = prev === mockActivities;
+        const newEvent = {
+          id: event.id || Date.now().toString(),
+          type: event.type || 'info',
+          agent: event.agent || 'System',
+          message: event.message,
+          timestamp: new Date(event.timestamp || Date.now())
+        };
+        return isMock ? [newEvent] : [newEvent, ...prev].slice(0, 5);
+      });
+    };
+
+    const handleNewThreat = (newThreat: any) => {
+      setThreats(prev => {
+        const isMock = prev === mockThreats;
+        const parsedThreat = {
+          ...newThreat, 
+          publishedDate: new Date(newThreat.publishedDate || newThreat.published_date)
+        };
+        return isMock ? [parsedThreat] : [parsedThreat, ...prev].slice(0, 3);
+      });
+    };
+
+    socket.on('agent_event', handleAgentEvent);
+    socket.on('new_cve_threat', handleNewThreat);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('agent_event', handleAgentEvent);
+      socket.off('new_cve_threat', handleNewThreat);
+    };
   }, []);
 
   return (
@@ -236,7 +294,7 @@ export function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <ActivityFeed activities={mockActivities} title="Agent Activity Stream" />
+        <ActivityFeed activities={activities} title="Agent Activity Stream" />
       </div>
 
       <div className="bg-card border border-border rounded-lg p-6">
@@ -245,7 +303,7 @@ export function Dashboard() {
           <span className="text-xs text-muted-foreground">Last 24 hours</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockThreats.map((threat) => (
+          {threats.map((threat) => (
             <ThreatCard key={threat.id} threat={threat} />
           ))}
         </div>

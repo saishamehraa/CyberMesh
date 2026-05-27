@@ -45,6 +45,35 @@ export function DeploymentCenter() {
     // 2. Listen for new manual deployments
     const handleNewDeployment = (dep: any) => {
       setDeployments(prev => [{ ...dep, timestamp: new Date(dep.timestamp) }, ...prev]);
+      
+      // DEMO MAGIC: Automatically resolve the deployment to PASS after 5 seconds
+      // IF the Nexus Orchestrator hasn't already BLOCKED it!
+      setTimeout(() => {
+        setDeployments(currentDeployments => {
+          return currentDeployments.map(d => {
+            // Only resolve if it is still PENDING
+            if (d.id === dep.id && d.status === 'PENDING') {
+              const passedDep: Deployment = {
+                ...d,
+                status: 'PASS',
+                checks: d.checks.map(check => ({
+                  ...check,
+                  status: 'pass',
+                  message: 'Security verification passed successfully.'
+                }))
+              };
+              
+              // Update the detailed view if the user is currently watching it
+              setSelectedDeployment((curr: any) => 
+                curr?.id === passedDep.id ? passedDep : curr
+              );
+              
+              return passedDep;
+            }
+            return d;
+          });
+        });
+      }, 5000); // 5 seconds of suspense!
     };
 
     // 3. THE MAGIC: Listen to the Nexus Orchestrator!

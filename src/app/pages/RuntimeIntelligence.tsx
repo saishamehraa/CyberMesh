@@ -59,8 +59,12 @@ export function RuntimeIntelligence() {
 
     // Live WebHook listener for the Hackathon Demo
     const handleAnomaly = (anomaly: any) => {
-      // 1. Add to anomaly feed
-      setAnomalies(prev => [{...anomaly, timestamp: new Date(anomaly.timestamp)}, ...prev].slice(0, 10));
+      // 1. Add to anomaly feed (replace mock if it's the first real event)
+      setAnomalies(prev => {
+        const isMock = prev === mockAnomalies;
+        const newAnomaly = { ...anomaly, timestamp: new Date(anomaly.timestamp || Date.now()) };
+        return isMock ? [newAnomaly] : [newAnomaly, ...prev].slice(0, 10);
+      });
       
       // 2. Spike the charts dramatically
       setLatencyData(prev => [...prev.slice(1), { time: 'now', value: anomaly.metrics.latency }]);
