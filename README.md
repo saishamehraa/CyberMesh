@@ -214,3 +214,5 @@ For a deep dive into the decentralized agent mesh and Supabase integration, see 
 ---
 
 CyberMesh demonstrates how autonomous AI agents, realtime observability, and operational security intelligence can converge into a unified self-defending infrastructure platform.
+
+![LICENSE](./license.md)
