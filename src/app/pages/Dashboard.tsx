@@ -110,7 +110,7 @@ export function Dashboard() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecurityScore(prev => Math.max(70, Math.min(100, prev + (Math.random() - 0.5) * 5)));
+      setSecurityScore(prev => Math.round(Math.max(70, Math.min(100, prev + (Math.random() - 0.5) * 5))));
     }, 5000);
     return () => clearInterval(interval);
   }, []);

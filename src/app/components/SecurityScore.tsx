@@ -76,7 +76,7 @@ export function SecurityScore({ score, size = 'lg' }: SecurityScoreProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          {animatedScore}
+          {Math.round(animatedScore)}
         </motion.div>
         <div className={`${sizes[size].label} text-muted-foreground font-medium`}>
           {getStatus(score)}

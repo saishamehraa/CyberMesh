@@ -41,19 +41,18 @@ export function RuntimeIntelligence() {
   ]);
 
   useEffect(() => {
-    // Normal ambient background noise for charts
     const interval = setInterval(() => {
       setLatencyData(prev => [
         ...prev.slice(1),
-        { time: 'now', value: Math.max(30, Math.min(80, prev[prev.length - 1].value + (Math.random() - 0.5) * 10)) },
+        { time: 'now', value: Math.round(Math.max(30, Math.min(80, prev[prev.length - 1].value + (Math.random() - 0.5) * 10))) },
       ]);
       setCpuData(prev => [
         ...prev.slice(1),
         {
           time: 'now',
-          api: Math.max(15, Math.min(40, prev[prev.length - 1].api + (Math.random() - 0.5) * 5)),
-          auth: Math.max(10, Math.min(35, prev[prev.length - 1].auth + (Math.random() - 0.5) * 5)),
-          db: Math.max(20, Math.min(50, prev[prev.length - 1].db + (Math.random() - 0.5) * 5)),
+          api: Math.round(Math.max(15, Math.min(40, prev[prev.length - 1].api + (Math.random() - 0.5) * 5))),
+          auth: Math.round(Math.max(10, Math.min(35, prev[prev.length - 1].auth + (Math.random() - 0.5) * 5))),
+          db: Math.round(Math.max(20, Math.min(50, prev[prev.length - 1].db + (Math.random() - 0.5) * 5))),
         },
       ]);
     }, 3000);
@@ -140,7 +139,7 @@ export function RuntimeIntelligence() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Avg Latency</p>
-              <p className="text-3xl font-bold text-warning">{latencyData[latencyData.length - 1].value}ms</p>
+              <p className="text-3xl font-bold text-warning">{Math.round(latencyData[latencyData.length - 1].value)}ms</p>
             </div>
             <Activity className="size-8 text-warning" />
           </div>
