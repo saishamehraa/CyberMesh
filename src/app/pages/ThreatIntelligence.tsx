@@ -209,6 +209,9 @@ export function ThreatIntelligence() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="font-semibold mb-4">Severity Distribution</h3>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dynamicSeverityDistribution}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.1)" />
               <XAxis dataKey="severity" stroke="#94a3b8" />
