@@ -1,5 +1,5 @@
 // apps/frontend/src/app/pages/RepositorySecurity.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Upload, FileCode, AlertTriangle, CheckCircle, XCircle, Loader2, Github, Zap } from 'lucide-react';
 
@@ -22,10 +22,28 @@ interface ScanResult {
 }
 
 export function RepositorySecurity() {
-  const [repoUrl, setRepoUrl] = useState('');
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [repoUrl, setRepoUrl] = useState(() => sessionStorage.getItem('cybermesh_repo') || '');
+  const [scanResult, setScanResult] = useState<ScanResult | null>(() => {
+    const saved = sessionStorage.getItem('cybermesh_scan');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return null; }
+    }
+    return null;
+  });
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (scanResult) {
+      sessionStorage.setItem('cybermesh_scan', JSON.stringify(scanResult));
+    } else {
+      sessionStorage.removeItem('cybermesh_scan');
+    }
+  }, [scanResult]);
+
+  useEffect(() => {
+    sessionStorage.setItem('cybermesh_repo', repoUrl);
+  }, [repoUrl]);
 
   const handleScan = async () => {
     if (!repoUrl.includes('github.com')) {

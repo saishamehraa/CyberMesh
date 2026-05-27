@@ -15,13 +15,6 @@ type Threat = {
   cvss?: number;
 };
 
-const severityDistribution = [
-  { severity: 'CRITICAL', count: 12, color: '#ef4444' },
-  { severity: 'HIGH', count: 28, color: '#f59e0b' },
-  { severity: 'MEDIUM', count: 45, color: '#06b6d4' },
-  { severity: 'LOW', count: 18, color: '#10b981' },
-];
-
 const exploitTrends = [
   { category: 'RCE', count: 15 },
   { category: 'SQLi', count: 23 },
@@ -119,6 +112,20 @@ export function ThreatIntelligence() {
     ? liveThreats
     : liveThreats.filter(t => t.severity === filter);
 
+  const stats = {
+    CRITICAL: liveThreats.filter(t => t.severity === 'CRITICAL').length,
+    HIGH: liveThreats.filter(t => t.severity === 'HIGH').length,
+    MEDIUM: liveThreats.filter(t => t.severity === 'MEDIUM').length,
+    LOW: liveThreats.filter(t => t.severity === 'LOW').length,
+  };
+
+  const dynamicSeverityDistribution = [
+    { severity: 'CRITICAL', count: stats.CRITICAL, color: '#ef4444' },
+    { severity: 'HIGH', count: stats.HIGH, color: '#f59e0b' },
+    { severity: 'MEDIUM', count: stats.MEDIUM, color: '#06b6d4' },
+    { severity: 'LOW', count: stats.LOW, color: '#10b981' },
+  ];
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-end">
@@ -149,7 +156,7 @@ export function ThreatIntelligence() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Critical</p>
-              <p className="text-3xl font-bold text-destructive">12</p>
+              <p className="text-3xl font-bold text-destructive">{stats.CRITICAL}</p>
             </div>
             <AlertTriangle className="size-8 text-destructive" />
           </div>
@@ -164,7 +171,7 @@ export function ThreatIntelligence() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">High</p>
-              <p className="text-3xl font-bold text-warning">28</p>
+              <p className="text-3xl font-bold text-warning">{stats.HIGH}</p>
             </div>
             <TrendingUp className="size-8 text-warning" />
           </div>
@@ -179,7 +186,7 @@ export function ThreatIntelligence() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Medium</p>
-              <p className="text-3xl font-bold text-info">45</p>
+              <p className="text-3xl font-bold text-info">{stats.MEDIUM}</p>
             </div>
             <Shield className="size-8 text-info" />
           </div>
@@ -194,7 +201,7 @@ export function ThreatIntelligence() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Low</p>
-              <p className="text-3xl font-bold text-success">18</p>
+              <p className="text-3xl font-bold text-success">{stats.LOW}</p>
             </div>
             <Globe className="size-8 text-success" />
           </div>
@@ -202,10 +209,7 @@ export function ThreatIntelligence() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="font-semibold mb-4">Severity Distribution</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={severityDistribution}>
+            <BarChart data={dynamicSeverityDistribution}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.1)" />
               <XAxis dataKey="severity" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
@@ -217,7 +221,7 @@ export function ThreatIntelligence() {
                 }}
               />
               <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                {severityDistribution.map((entry, index) => (
+                {dynamicSeverityDistribution.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
