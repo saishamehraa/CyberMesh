@@ -88,7 +88,7 @@ router.post('/analyze-dependencies', async (req: Request, res: Response) => {
           io.emit('new_cve_threat', savedThreat);
 
           // 2. Alert the Nexus Orchestrator to calculate composite risk
-          io.to('orchestration').emit('agent_event', {
+          io.emit('agent_event', {
             id: savedThreat.id,
             type: savedThreat.severity === 'CRITICAL' ? 'error' : 'warning',
             agent: 'Intel Agent',
@@ -130,7 +130,7 @@ router.post('/simulate', async (req: Request, res: Response) => {
     if (error) throw error;
 
     io.emit('new_cve_threat', savedThreat);
-    io.to('orchestration').emit('agent_event', {
+    io.emit('agent_event', {
       id: savedThreat.id,
       type: 'error',
       agent: 'Intel Agent',

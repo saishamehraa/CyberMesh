@@ -383,8 +383,8 @@ export function AutonomousOperations() {
             <Network className="size-6 text-success" />
             <h3 className="font-semibold">Events Processed</h3>
           </div>
-          <p className="text-3xl font-bold mb-1">1,247</p>
-          <p className="text-xs text-muted-foreground">Last 24 hours</p>
+          <p className="text-3xl font-bold mb-1">{events.length}</p>
+          <p className="text-xs text-muted-foreground">Real-time orchestrated events</p>
         </motion.div>
 
         <motion.div
@@ -397,8 +397,8 @@ export function AutonomousOperations() {
             <Shield className="size-6 text-warning" />
             <h3 className="font-semibold">Decisions Made</h3>
           </div>
-          <p className="text-3xl font-bold mb-1">342</p>
-          <p className="text-xs text-muted-foreground">Automated actions</p>
+          <p className="text-3xl font-bold mb-1">{events.filter(e => e.type === 'error' || e.type === 'success').length}</p>
+          <p className="text-xs text-muted-foreground">Autonomous mesh actions</p>
         </motion.div>
       </div>
 

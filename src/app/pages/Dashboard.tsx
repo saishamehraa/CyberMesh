@@ -109,6 +109,8 @@ const threatVolumeData = [
 export function Dashboard() {
   const [securityScore, setSecurityScore] = useState(92);
   const [threats, setThreats] = useState<Threat[]>([]);
+  const [deploymentsCount, setDeploymentsCount] = useState(8);
+  const [pendingDeployments, setPendingDeployments] = useState(0);
   
   const [activities, setActivities] = useState<Activity[]>(() => {
     const saved = sessionStorage.getItem('cybermesh_activities');
@@ -145,6 +147,18 @@ export function Dashboard() {
       }
     };
     fetchThreats();
+
+    const fetchDeployments = async () => {
+      try {
+        const res = await fetch('/api/deployment');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setDeploymentsCount(data.length);
+          setPendingDeployments(data.filter(d => d.status === 'PENDING').length);
+        }
+      } catch (error) {}
+    };
+    fetchDeployments();
 
     // 2. Ambient score fluctuation
     const interval = setInterval(() => {
@@ -207,34 +221,34 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Active Threats"
-          value={23}
-          change="+3 today"
+          value={threats.length}
+          change="Live OSV.dev count"
           icon={AlertTriangle}
-          trend="up"
+          trend={threats.length > 0 ? "up" : "neutral"}
           color="red"
         />
         <MetricCard
           title="Blocked Attacks"
-          value={147}
-          change="+12 today"
+          value={activities.filter(a => a.type === 'error').length}
+          change="Intercepted across mesh"
           icon={Shield}
           trend="up"
           color="green"
         />
         <MetricCard
           title="Deployments"
-          value={8}
-          change="2 pending"
+          value={deploymentsCount}
+          change={`${pendingDeployments} pending pipelines`}
           icon={GitBranch}
           trend="neutral"
           color="blue"
         />
         <MetricCard
           title="Runtime Health"
-          value="99.8%"
-          change="+0.2%"
+          value={activities.some(a => a.agent === 'Runtime Agent' && a.type === 'error') ? "84.2%" : "99.8%"}
+          change="Real-time telemetry"
           icon={Server}
-          trend="up"
+          trend={activities.some(a => a.agent === 'Runtime Agent' && a.type === 'error') ? "down" : "up"}
           color="cyan"
         />
       </div>

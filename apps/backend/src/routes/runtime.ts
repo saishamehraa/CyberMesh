@@ -35,7 +35,7 @@ router.post('/dynatrace-webhook', async (req: Request, res: Response) => {
   io.emit('runtime_anomaly', anomaly);
 
   // 2. Alert the Nexus Orchestrator to potentially block deployments
-  io.to('orchestration').emit('agent_event', {
+  io.emit('agent_event', {
     id: ProblemID,
     type: anomaly.severity === 'critical' ? 'error' : 'warning',
     agent: 'Runtime Agent',
@@ -70,7 +70,7 @@ router.post('/simulate-anomaly', (req: Request, res: Response) => {
   io.emit('runtime_anomaly', anomaly);
 
   // 2. Alert the Orchestrator (This makes the Runtime node glow!)
-  io.to('orchestration').emit('agent_event', {
+  io.emit('agent_event', {
     id: Date.now().toString(),
     type: 'error',
     agent: 'Runtime Agent',

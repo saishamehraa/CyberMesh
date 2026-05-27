@@ -228,7 +228,7 @@ app.get('/admin', (req, res) => {
     // Emit live events to Orchestrator based on ACTUAL findings
     const hasCritical = analysisResult.vulnerabilities.some((v: any) => v.severity === 'CRITICAL');
     
-    io.to('orchestration').emit('agent_event', {
+    io.emit('agent_event', {
       id: Date.now().toString(),
       type: hasCritical ? 'error' : 'success',
       agent: 'DevSecOps Agent',

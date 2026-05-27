@@ -101,10 +101,10 @@ export const analyzePrompt = async (req: Request, res: Response) => {
     // Ensure score is bounded
     result.score = Math.min(100, Math.max(0, result.score || 0));
 
-    // Emit event to Nexus Orchestrator if a threat is detected
+    // Emit event to Orchestrator UI
     if (result.risk !== 'SAFE' && result.threats?.length > 0) {
       const io = (req as any).io;
-      io.to('orchestration').emit('agent_event', {
+      io.emit('agent_event', {
         id: Date.now().toString(),
         type: result.risk === 'BLOCKED' ? 'error' : 'warning',
         agent: 'Gateway Agent',
