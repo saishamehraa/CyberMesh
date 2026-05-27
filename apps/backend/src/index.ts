@@ -46,7 +46,8 @@ app.get('/health', (req, res) => {
 });
 
 // Serve frontend static files
-const frontendPath = path.join(process.cwd(), 'dist');
+// Resolve to the root workspace 'dist' directory
+const frontendPath = path.join(__dirname, '../../../dist');
 app.use(express.static(frontendPath));
 
 app.get('*', (req, res) => {
