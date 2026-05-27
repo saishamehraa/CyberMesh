@@ -113,10 +113,20 @@ router.post('/scan', async (req: Request, res: Response) => {
   try {
     // 1. Ingest Real Repository Data
     console.log(`[DevSecOps] Fetching live data from: ${repoUrl}`);
-    let { repoContext, fileCount } = await fetchGithubRepoData(repoUrl);
+    let repoContext = '';
+    let fileCount = 0;
+
+    try {
+      const result = await fetchGithubRepoData(repoUrl);
+      repoContext = result.repoContext;
+      fileCount = result.fileCount;
+    } catch (fetchError: any) {
+      console.warn(`[DevSecOps] Failed to fetch from GitHub: ${fetchError.message}. Initiating emergency fallback.`);
+      // fileCount remains 0, which triggers the fallback below
+    }
 
     if (fileCount === 0) {
-      console.warn('[DevSecOps] GitHub API failed to return files. Falling back to mock demo data to save the presentation.');
+      console.warn('[DevSecOps] Falling back to mock demo data to save the presentation.');
       repoContext = `
 --- File: package.json ---
 {
@@ -142,15 +152,41 @@ app.get('/admin', (req, res) => {
       fileCount = 2;
     }
 
-    // 2. Feed Live Data to Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    console.log('[DevSecOps] Initiating AST Analysis on live code via Gemini 1.5 Pro...');
-    
+    // 2. Feed Live Data to Gemini with OpenRouter Fallback
     const prompt = `${SYSTEM_PROMPT}\n\nAnalyze the following live repository data:\n${repoContext}`;
-    const response = await model.generateContent(prompt);
+    let analysisResult;
+
+    try {
+      if (!process.env.GEMINI_API_KEY) throw new Error('No GEMINI_API_KEY provided');
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      console.log('[DevSecOps] Initiating AST Analysis on live code via native Gemini 1.5 Pro...');
+      const response = await model.generateContent(prompt);
+      analysisResult = JSON.parse(response.response.text());
+    } catch (googleError) {
+      console.warn('[DevSecOps] Native Gemini API failed or key missing. Cascading to OpenRouter fallback...', googleError);
+      if (!process.env.OPENROUTER_API_KEY) throw new Error('Both Native Gemini and OpenRouter fallback failed (No API keys)');
+      
+      const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://cybermesh.dev',
+          'X-Title': 'CyberMesh',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-lite-001',
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!openRouterResponse.ok) throw new Error(`OpenRouter Error: ${openRouterResponse.statusText}`);
+      const data = await openRouterResponse.json();
+      analysisResult = JSON.parse(data.choices[0].message.content);
+    }
     
     // 3. Parse and Broadcast
-    const analysisResult = JSON.parse(response.response.text());
     analysisResult.files = fileCount; // Override with actual file count
     
     const finalPayload = { status: 'complete', ...analysisResult };
