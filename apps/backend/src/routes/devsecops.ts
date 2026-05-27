@@ -88,32 +88,37 @@ async function fetchGithubRepoData(repoUrl: string) {
   let fileCount = 0;
   let dependencies: any[] = [];
 
-  // 4. Fetch the actual content for up to 8 files to avoid context limits
-  const filesToFetch = sourceFiles.slice(0, 8);
-  for (const file of filesToFetch) {
-    const rawRes = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${file.path}`, { headers });
-    if (!rawRes.ok) continue;
-    const rawText = await rawRes.text();
+  // 4. Fetch the actual content for all valid source files concurrently!
+  const fetchPromises = sourceFiles.map(async (file: any) => {
+    try {
+      const rawRes = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${file.path}`, { headers });
+      if (!rawRes.ok) return;
+      const rawText = await rawRes.text();
 
-    if (file.path.endsWith('package.json')) {
-      try {
-        const pkg = JSON.parse(rawText);
-        const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
-        dependencies = Object.entries(allDeps).map(([name, version]) => ({
-          name,
-          version: String(version).replace(/[\^~]/g, ''),
-          vulnerabilities: 0,
-          severity: 'NONE'
-        }));
-      } catch (e) { 
-        console.error("Failed to parse package.json", e); 
+      if (file.path.endsWith('package.json')) {
+        try {
+          const pkg = JSON.parse(rawText);
+          const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+          dependencies = Object.entries(allDeps).map(([name, version]) => ({
+            name,
+            version: String(version).replace(/[\^~]/g, ''),
+            vulnerabilities: 0,
+            severity: 'NONE'
+          }));
+        } catch (e) { 
+          console.error("Failed to parse package.json", e); 
+        }
+        fileCount++;
+      } else {
+        repoContext += `\n\n--- FILE: ${file.path} ---\n${rawText}`;
+        fileCount++;
       }
-      fileCount++;
-    } else {
-      repoContext += `\n\n--- FILE: ${file.path} ---\n${rawText}`;
-      fileCount++;
+    } catch (e) {
+      console.error(`Failed to fetch ${file.path}`);
     }
-  }
+  });
+
+  await Promise.all(fetchPromises);
 
   return { repoContext, fileCount, dependencies };
 }
