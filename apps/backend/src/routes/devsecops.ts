@@ -81,7 +81,7 @@ async function fetchGithubRepoData(repoUrl: string) {
   );
 
   if (sourceFiles.length === 0) {
-    return { repoContext: '', fileCount: 0 };
+    return { repoContext: '', fileCount: 0, dependencies: [] };
   }
 
   let repoContext = '';
@@ -137,7 +137,7 @@ router.post('/scan', async (req: Request, res: Response) => {
       const result = await fetchGithubRepoData(repoUrl);
       repoContext = result.repoContext;
       fileCount = result.fileCount;
-      dependencies = result.dependencies;
+      dependencies = result.dependencies || [];
     } catch (fetchError: any) {
       console.warn(`[DevSecOps] Failed to fetch from GitHub: ${fetchError.message}. Initiating emergency fallback.`);
       // fileCount remains 0, which triggers the fallback below
