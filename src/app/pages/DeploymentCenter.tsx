@@ -27,6 +27,7 @@ export function DeploymentCenter() {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [selectedDeployment, setSelectedDeployment] = useState<Deployment | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [releaseName, setReleaseName] = useState('release/v2.1.0-core');
 
   useEffect(() => {
     // 1. Fetch initial deployments
@@ -117,7 +118,11 @@ export function DeploymentCenter() {
   const triggerDeployment = async () => {
     setIsDeploying(true);
     try {
-      await fetch('/api/deployment/trigger', { method: 'POST' });
+      await fetch('/api/deployment/trigger', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: releaseName, branch: 'main' })
+      });
     } catch (error) {
       console.error('Failed to trigger deployment:', error);
     } finally {
@@ -166,14 +171,23 @@ export function DeploymentCenter() {
         </div>
 
         {/* Hackathon Demo Trigger */}
-        <button
-          onClick={triggerDeployment}
-          disabled={isDeploying}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
-        >
-          <Play className={`size-4 ${isDeploying ? 'animate-pulse' : ''}`} />
-          Initiate Production Release
-        </button>
+        <div className="flex gap-3">
+          <input 
+            type="text" 
+            value={releaseName}
+            onChange={(e) => setReleaseName(e.target.value)}
+            className="bg-input-background border border-border rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors text-sm"
+            placeholder="Release Name..."
+          />
+          <button
+            onClick={triggerDeployment}
+            disabled={isDeploying || !releaseName}
+            className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+          >
+            <Play className={`size-4 ${isDeploying ? 'animate-pulse' : ''}`} />
+            Initiate Production Release
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -25,13 +25,14 @@ router.get('/', async (req: Request, res: Response) => {
 // POST a new pending deployment
 router.post('/trigger', async (req: Request, res: Response) => {
   const io = (req as any).io;
+  const { name, branch } = req.body;
   
   // 1. Insert the parent deployment
   const { data: deployment, error: depError } = await supabase
     .from('deployments')
     .insert({
-      name: 'release/v1.2.0-core',
-      branch: 'main',
+      name: name || 'release/v1.2.0-core',
+      branch: branch || 'main',
       status: 'PENDING',
       score: 100
     })
