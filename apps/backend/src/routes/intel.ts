@@ -107,4 +107,42 @@ router.post('/analyze-dependencies', async (req: Request, res: Response) => {
   }
 });
 
+// Endpoint for Hackathon Demo
+router.post('/simulate', async (req: Request, res: Response) => {
+  const io = (req as any).io;
+  
+  const threatData = {
+    cve: `CVE-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000) + 10000}`,
+    severity: 'CRITICAL',
+    title: 'Zero-day remote code execution vulnerability detected in memory allocator',
+    affected_package: 'node-gyp@9.3.1',
+    published_date: new Date().toISOString(),
+    cvss: 9.8
+  };
+
+  try {
+    const { data: savedThreat, error } = await supabase
+      .from('threats')
+      .upsert(threatData, { onConflict: 'cve' })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    io.emit('new_cve_threat', savedThreat);
+    io.to('orchestration').emit('agent_event', {
+      id: savedThreat.id,
+      type: 'error',
+      agent: 'Intel Agent',
+      message: `[MOCK ALERT] Active exploit found: ${savedThreat.affected_package} (${savedThreat.cve})`,
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({ success: true, threat: savedThreat });
+  } catch (err) {
+    console.error('[Intel Agent] Simulation DB Error:', err);
+    res.status(500).json({ error: 'Failed to simulate threat' });
+  }
+});
+
 export default router;
