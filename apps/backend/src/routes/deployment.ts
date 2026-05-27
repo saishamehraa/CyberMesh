@@ -63,7 +63,9 @@ router.post('/trigger', async (req: Request, res: Response) => {
   const lastScan = (global as any).lastScannedRepo;
   if (lastScan && lastScan.hasCritical) {
     // If the repo had critical vulns, trigger an autonomous block after 3 seconds
-    setTimeout(() => {
+    setTimeout(async () => {
+      await supabase.from('deployments').update({ status: 'BLOCKED', score: 24 }).eq('id', deployment.id);
+      
       io.emit('orchestration_action', {
         id: Date.now().toString(),
         type: 'error',
@@ -72,6 +74,11 @@ router.post('/trigger', async (req: Request, res: Response) => {
         timestamp: new Date()
       });
     }, 3000);
+  } else {
+    // If it's clean, auto-pass it in the database after 5 seconds
+    setTimeout(async () => {
+      await supabase.from('deployments').update({ status: 'PASS' }).eq('id', deployment.id);
+    }, 5000);
   }
 
   res.json({ success: true, deployment: newDeployment });

@@ -109,7 +109,21 @@ const threatVolumeData = [
 export function Dashboard() {
   const [securityScore, setSecurityScore] = useState(92);
   const [threats, setThreats] = useState<Threat[]>([]);
-  const [activities, setActivities] = useState<Activity[]>(mockActivities);
+  
+  const [activities, setActivities] = useState<Activity[]>(() => {
+    const saved = sessionStorage.getItem('cybermesh_activities');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: any) => ({ ...p, timestamp: new Date(p.timestamp) }));
+      } catch (e) { return mockActivities; }
+    }
+    return mockActivities;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('cybermesh_activities', JSON.stringify(activities));
+  }, [activities]);
 
   useEffect(() => {
     // 1. Fetch real threats from DB

@@ -189,7 +189,20 @@ const mockEvents = [
 export function AutonomousOperations() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [events, setEvents] = useState<any[]>(mockEvents);
+  const [events, setEvents] = useState<any[]>(() => {
+    const saved = sessionStorage.getItem('cybermesh_events');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: any) => ({ ...p, timestamp: new Date(p.timestamp) }));
+      } catch (e) { return mockEvents; }
+    }
+    return mockEvents;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('cybermesh_events', JSON.stringify(events));
+  }, [events]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
