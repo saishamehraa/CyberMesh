@@ -77,8 +77,13 @@ async function callOllamaFallback(prompt: string): Promise<any> {
 
 export const analyzePrompt = async (req: Request, res: Response) => {
   try {
-    const { prompt } = req.body;
+    let { prompt, encoded } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+
+    // Decode if the frontend applied Base64 to bypass WAFs
+    if (encoded) {
+      prompt = Buffer.from(prompt, 'base64').toString('utf-8');
+    }
 
     let result;
     try {
