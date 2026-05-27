@@ -39,7 +39,7 @@ export function ThreatIntelligence() {
   useEffect(() => {
     const fetchThreats = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/intel/threats');
+        const res = await fetch('/api/intel/threats');
         const data = await res.json();
         // Ensure dates are parsed correctly
         const parsedData = data.map((t: any) => ({ ...t, publishedDate: new Date(t.publishedDate) }));
@@ -69,7 +69,7 @@ export function ThreatIntelligence() {
   const triggerSimulatedThreat = async () => {
     setIsSyncing(true);
     try {
-      await fetch('http://localhost:3001/api/intel/simulate', { method: 'POST' });
+      await fetch('/api/intel/simulate', { method: 'POST' });
     } catch (error) {
       console.error('Failed to simulate threat:', error);
     } finally {

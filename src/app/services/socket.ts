@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 import { io } from 'socket.io-client';
 
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:3001';
+const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || (import.meta.env.PROD ? undefined : 'http://localhost:3001');
 
 export const socket = io(GATEWAY_URL, {
   autoConnect: true,

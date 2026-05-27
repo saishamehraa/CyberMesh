@@ -85,7 +85,7 @@ export function RuntimeIntelligence() {
   const triggerAnomaly = async () => {
     setIsSimulating(true);
     try {
-      await fetch('http://localhost:3001/api/runtime/simulate-anomaly', { method: 'POST' });
+      await fetch('/api/runtime/simulate-anomaly', { method: 'POST' });
     } catch (error) {
       console.error('Failed to trigger anomaly:', error);
     } finally {

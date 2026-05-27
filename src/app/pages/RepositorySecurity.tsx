@@ -38,7 +38,7 @@ export function RepositorySecurity() {
     setScanResult(null); // Clear previous results
 
     try {
-      const response = await fetch('http://localhost:3001/api/devsecops/scan', {
+      const response = await fetch('/api/devsecops/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repoUrl }),
@@ -54,7 +54,7 @@ export function RepositorySecurity() {
       
       if (data.dependencies && data.dependencies.length > 0) {
         // Fire and forget - let the Intel Agent do its job in the background!
-        fetch('http://localhost:3001/api/intel/analyze-dependencies', {
+        fetch('/api/intel/analyze-dependencies', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dependencies: data.dependencies })

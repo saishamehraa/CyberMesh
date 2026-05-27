@@ -32,7 +32,7 @@ export function DeploymentCenter() {
     // 1. Fetch initial deployments
     const fetchDeployments = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/deployment');
+        const res = await fetch('/api/deployment');
         const data = await res.json();
         const parsed = data.map((d: any) => ({ ...d, timestamp: new Date(d.timestamp) }));
         setDeployments(parsed);
@@ -88,7 +88,7 @@ export function DeploymentCenter() {
   const triggerDeployment = async () => {
     setIsDeploying(true);
     try {
-      await fetch('http://localhost:3001/api/deployment/trigger', { method: 'POST' });
+      await fetch('/api/deployment/trigger', { method: 'POST' });
     } catch (error) {
       console.error('Failed to trigger deployment:', error);
     } finally {
