@@ -1,5 +1,5 @@
 //src/app/pages/AIGateway.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Editor from '@monaco-editor/react';
 import { Shield, AlertTriangle, CheckCircle, Play, RotateCcw } from 'lucide-react';
@@ -27,9 +27,21 @@ const maliciousPrompts = [
 ];
 
 export function AIGateway() {
-  const [prompt, setPrompt] = useState('');
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [prompt, setPrompt] = useState(() => sessionStorage.getItem('cybermesh_gateway_prompt') || '');
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(() => {
+    const saved = sessionStorage.getItem('cybermesh_gateway_analysis');
+    try { return saved ? JSON.parse(saved) : null; } catch { return null; }
+  });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.setItem('cybermesh_gateway_prompt', prompt);
+    if (analysis) {
+      sessionStorage.setItem('cybermesh_gateway_analysis', JSON.stringify(analysis));
+    } else {
+      sessionStorage.removeItem('cybermesh_gateway_analysis');
+    }
+  }, [prompt, analysis]);
 
   const analyzePrompt = async (text: string) => {
     setIsAnalyzing(true);

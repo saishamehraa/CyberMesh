@@ -23,38 +23,10 @@ const exploitTrends = [
   { category: 'CSRF', count: 8 },
 ];
 
-const mockThreats: Threat[] = [
-  {
-    id: '1',
-    cve: 'CVE-2024-1234',
-    severity: 'CRITICAL',
-    title: 'Remote Code Execution in Express.js',
-    affectedPackage: 'express@4.17.1',
-    publishedDate: new Date('2024-05-20'),
-    cvss: 9.8,
-  },
-  {
-    id: '2',
-    cve: 'CVE-2024-5678',
-    severity: 'HIGH',
-    title: 'SQL Injection vulnerability in Sequelize ORM',
-    affectedPackage: 'sequelize@6.21.0',
-    publishedDate: new Date('2024-05-22'),
-    cvss: 8.1,
-  },
-  {
-    id: '3',
-    cve: 'CVE-2024-9012',
-    severity: 'MEDIUM',
-    title: 'Cross-Site Scripting in React DOM',
-    affectedPackage: 'react-dom@18.2.0',
-    publishedDate: new Date('2024-05-23'),
-    cvss: 6.5,
-  },
-];
+// mockThreats removed to ensure UI reflects real DB state
 
 export function ThreatIntelligence() {
-  const [liveThreats, setLiveThreats] = useState<Threat[]>(mockThreats);
+  const [liveThreats, setLiveThreats] = useState<Threat[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -68,11 +40,11 @@ export function ThreatIntelligence() {
           const parsedData = data.map((t: any) => ({ ...t, publishedDate: new Date(t.publishedDate || t.published_date) }));
           setLiveThreats(parsedData);
         } else {
-          setLiveThreats(mockThreats);
+          setLiveThreats([]);
         }
       } catch (error) {
         console.error('Failed to fetch threats:', error);
-        setLiveThreats(mockThreats);
+        setLiveThreats([]);
       }
     };
     fetchThreats();
@@ -80,12 +52,11 @@ export function ThreatIntelligence() {
     // Listen for live socket injections
     const handleNewThreat = (newThreat: any) => {
       setLiveThreats(prev => {
-        const isMock = prev === mockThreats;
         const parsedThreat = {
           ...newThreat, 
           publishedDate: new Date(newThreat.publishedDate || newThreat.published_date)
         };
-        return isMock ? [parsedThreat] : [parsedThreat, ...prev].slice(0, 12);
+        return [parsedThreat, ...prev].slice(0, 12);
       });
     };
 

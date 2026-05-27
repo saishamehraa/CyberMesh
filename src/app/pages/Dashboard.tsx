@@ -27,35 +27,7 @@ type Threat = {
   cvss?: number;
 };
 
-const mockThreats: Threat[] = [
-  {
-    id: '1',
-    cve: 'CVE-2024-1234',
-    severity: 'CRITICAL',
-    title: 'Remote Code Execution in Express.js',
-    affectedPackage: 'express@4.17.1',
-    publishedDate: new Date('2024-05-20'),
-    cvss: 9.8,
-  },
-  {
-    id: '2',
-    cve: 'CVE-2024-5678',
-    severity: 'HIGH',
-    title: 'SQL Injection vulnerability in Sequelize ORM',
-    affectedPackage: 'sequelize@6.21.0',
-    publishedDate: new Date('2024-05-22'),
-    cvss: 8.1,
-  },
-  {
-    id: '3',
-    cve: 'CVE-2024-9012',
-    severity: 'MEDIUM',
-    title: 'Cross-Site Scripting in React DOM',
-    affectedPackage: 'react-dom@18.2.0',
-    publishedDate: new Date('2024-05-23'),
-    cvss: 6.5,
-  },
-];
+// Mock threats removed to enforce live data only
 
 const mockActivities: Activity[] = [
   {
@@ -140,10 +112,10 @@ export function Dashboard() {
           }));
           setThreats(parsedData);
         } else {
-          setThreats(mockThreats);
+          setThreats([]);
         }
       } catch (error) {
-        setThreats(mockThreats);
+        setThreats([]);
       }
     };
     fetchThreats();
@@ -182,12 +154,12 @@ export function Dashboard() {
 
     const handleNewThreat = (newThreat: any) => {
       setThreats(prev => {
-        const isMock = prev === mockThreats;
         const parsedThreat = {
           ...newThreat, 
           publishedDate: new Date(newThreat.publishedDate || newThreat.published_date)
         };
-        return isMock ? [parsedThreat] : [parsedThreat, ...prev].slice(0, 3);
+        // If we only have empty state, just return it
+        return [parsedThreat, ...prev].slice(0, 3);
       });
     };
 
@@ -331,9 +303,15 @@ export function Dashboard() {
           <span className="text-xs text-muted-foreground">Last 24 hours</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {threats.map((threat) => (
-            <ThreatCard key={threat.id} threat={threat} />
-          ))}
+          {threats.length === 0 ? (
+             <div className="col-span-full p-4 text-center text-muted-foreground bg-accent/20 rounded-lg border border-border">
+               No live threats detected in DB.
+             </div>
+          ) : (
+            threats.map((threat) => (
+              <ThreatCard key={threat.id} threat={threat} />
+            ))
+          )}
         </div>
       </div>
     </div>
