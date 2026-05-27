@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "start": "npm run build && cd apps/backend && npm run start",
+    "start": "cd apps/backend && npm run start",
     "deploy": "npm run start"
   },
   "dependencies": {
