@@ -86,12 +86,24 @@ export function DeploymentCenter() {
               ...dep,
               status: 'BLOCKED',
               score: 24, // Drop the score
-              checks: dep.checks.map((check: any) => ({
-                ...check,
-                status: check.agent === 'Runtime' || check.agent === 'Intel' ? 'fail' : 'pass',
-                message: check.agent === 'Runtime' ? 'Critical infrastructure anomaly detected' :
-                  check.agent === 'Intel' ? 'Correlated CVE exploit active' : 'Check passed'
-              }))
+              checks: dep.checks.map((check: any) => {
+                let checkStatus = 'pass';
+                let checkMessage = 'Check passed';
+
+                if (action.agent === 'DevSecOps Agent' && check.agent === 'DevSecOps') {
+                  checkStatus = 'fail';
+                  checkMessage = action.message;
+                } else if (action.agent !== 'DevSecOps Agent' && (check.agent === 'Runtime' || check.agent === 'Intel')) {
+                  checkStatus = 'fail';
+                  checkMessage = check.agent === 'Runtime' ? 'Critical infrastructure anomaly detected' : 'Correlated CVE exploit active';
+                }
+
+                return {
+                  ...check,
+                  status: checkStatus,
+                  message: checkMessage
+                };
+              })
             };
 
             // If the user is currently looking at this deployment, update their view

@@ -58,6 +58,22 @@ router.post('/trigger', async (req: Request, res: Response) => {
 
   // 3. Broadcast to UI
   io.emit('deployment_new', newDeployment);
+
+  // 4. Autonomous Mesh Decision!
+  const lastScan = (global as any).lastScannedRepo;
+  if (lastScan && lastScan.hasCritical) {
+    // If the repo had critical vulns, trigger an autonomous block after 3 seconds
+    setTimeout(() => {
+      io.emit('orchestration_action', {
+        id: Date.now().toString(),
+        type: 'error',
+        agent: 'DevSecOps Agent',
+        message: `deployment block CRITICAL: DevSecOps Agent isolated ${lastScan.vulnerabilities.length} vulnerabilities in ${lastScan.repoUrl.split('/').pop()}. Reason: ${lastScan.vulnerabilities[0]?.title || 'Code risk'}`,
+        timestamp: new Date()
+      });
+    }, 3000);
+  }
+
   res.json({ success: true, deployment: newDeployment });
 });
 

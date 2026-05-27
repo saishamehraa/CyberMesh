@@ -238,6 +238,13 @@ app.get('/admin', (req, res) => {
       timestamp: new Date()
     });
 
+    // Save to global state so the Deployment Center can use it!
+    (global as any).lastScannedRepo = {
+      repoUrl,
+      hasCritical,
+      vulnerabilities: analysisResult.vulnerabilities || []
+    };
+
     return res.json(finalPayload);
 
   } catch (error: any) {
