@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Central Logging for the Nexus Orchestrator
+model AgentEvent {
+  id        String   @id @default(uuid())
+  type      String   // 'success', 'warning', 'error', 'info'
+  agent     String   // 'Gateway Agent', 'Runtime Agent', etc.
+  message   String
+  timestamp DateTime @default(now())
+}
+
+// 2. Intel Agent Threat Feed
+model Threat {
+  id              String   @id @default(uuid())
+  cve             String   @unique
+  severity        String   // 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+  title           String
+  affectedPackage String?
+  publishedDate   DateTime
+  cvss            Float?
+  createdAt       DateTime @default(now())
+}
+
+// 3. Deployment Center Pipelines
+model Deployment {
+  id        String            @id @default(uuid())
+  name      String
+  branch    String
+  status    String            // 'PASS', 'WARN', 'BLOCKED', 'PENDING'
+  score     Int
+  timestamp DateTime          @default(now())
+  checks    DeploymentCheck[] 
+}
+
+model DeploymentCheck {
+  id           String     @id @default(uuid())
+  name         String
+  status       String     // 'pass', 'warn', 'fail', 'pending'
+  message      String
+  agent        String
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+}
