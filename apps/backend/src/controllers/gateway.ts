@@ -55,24 +55,49 @@ async function callOpenRouter(prompt: string): Promise<any> {
 }
 
 async function callOllamaFallback(prompt: string): Promise<any> {
-  console.log('[Gateway] Triggering Ollama fallback (gemma2)...');
-  const response = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+  console.log('[Gateway] Triggering Ollama fallback...');
+  
+  // Auto-detect an available local model
+  const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+    headers: { 'ngrok-skip-browser-warning': '1' }
+  });
+  if (!tagsResponse.ok) {
+    throw new Error(`Ollama API Unreachable: ${tagsResponse.statusText}`);
+  }
+  const tagsData = await tagsResponse.json();
+  if (!tagsData.models || tagsData.models.length === 0) {
+    throw new Error('Ollama Error: No models found. Please pull a model (e.g., `ollama pull llama3`).');
+  }
+  
+  // Prioritize gemma2 or llama3, otherwise pick the first one
+  const modelNames = tagsData.models.map((m: any) => m.name);
+  const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) || 
+                        modelNames.find((m: string) => m.includes('llama3')) || 
+                        modelNames[0];
+                        
+  console.log(`[Gateway] Using local model: ${selectedModel}`);
+
+  const response = await fetch(`${OLLAMA_API_URL}/api/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': '1'
+    },
     body: JSON.stringify({
-      model: 'gemma2',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt }
-      ],
+      model: selectedModel,
+      prompt: `${SYSTEM_PROMPT}\n\nUser Input: ${prompt}`,
       stream: false,
       format: 'json'
     })
   });
 
-  if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+  if (!response.ok) {
+    const errBody = await response.text();
+    throw new Error(`Ollama Error: ${response.statusText} - ${errBody}`);
+  }
+  
   const data = await response.json();
-  return JSON.parse(data.message.content);
+  return JSON.parse(data.response);
 }
 
 export const analyzePrompt = async (req: Request, res: Response) => {

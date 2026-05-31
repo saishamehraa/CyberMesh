@@ -220,20 +220,46 @@ app.get('/admin', (req, res) => {
         console.warn('[DevSecOps] OpenRouter fallback failed. Cascading to local Ollama fallback...', openRouterError);
         const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434';
         
-        const ollamaResponse = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+        // Auto-detect an available local model
+        const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+          headers: { 'ngrok-skip-browser-warning': '1' }
+        });
+        if (!tagsResponse.ok) {
+          throw new Error(`Ollama API Unreachable: ${tagsResponse.statusText}`);
+        }
+        const tagsData = await tagsResponse.json();
+        if (!tagsData.models || tagsData.models.length === 0) {
+          throw new Error('Ollama Error: No models found. Please pull a model (e.g., `ollama pull llama3`).');
+        }
+        
+        // Prioritize gemma2 or llama3, otherwise pick the first one
+        const modelNames = tagsData.models.map((m: any) => m.name);
+        const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) || 
+                              modelNames.find((m: string) => m.includes('llama3')) || 
+                              modelNames[0];
+
+        const ollamaResponse = await fetch(`${OLLAMA_API_URL}/api/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '1'
+          },
           body: JSON.stringify({
-            model: 'gemma2',
-            messages: [{ role: 'user', content: prompt }],
+            model: selectedModel,
+            prompt: prompt,
             stream: false,
             format: 'json'
           })
         });
 
-        if (!ollamaResponse.ok) throw new Error(`Ollama Error: ${ollamaResponse.statusText}`);
+        if (!ollamaResponse.ok) {
+          const errBody = await ollamaResponse.text();
+          throw new Error(`Ollama Error: ${ollamaResponse.statusText} - ${errBody}`);
+        }
+        
         const data = await ollamaResponse.json();
-        analysisResult = JSON.parse(data.message.content);
+        // Ollama /api/generate puts the output in the `response` field
+        analysisResult = JSON.parse(data.response);
       }
     }
     
