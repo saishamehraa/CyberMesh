@@ -151,8 +151,13 @@ router.post('/analyze-dependencies', async (req: Request, res: Response) => {
 router.post('/simulate', async (req: Request, res: Response) => {
   const io = (req as any).io;
   
+  const lastScan = (global as any).lastScannedRepo;
+  if (lastScan && !lastScan.hasCritical && (!lastScan.vulnerabilities || lastScan.vulnerabilities.length === 0)) {
+    return res.json({ success: true, message: 'Repo scan is clean, no threats to sync.' });
+  }
+
   const threatData = {
-    cve: `CVE-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000) + 10000}`,
+    cve: `CVE-${new Date().getFullYear()}-99999`, // Fixed CVE to prevent infinite duplication
     severity: 'CRITICAL',
     title: 'Zero-day remote code execution vulnerability detected in memory allocator',
     affected_package: 'node-gyp@9.3.1',

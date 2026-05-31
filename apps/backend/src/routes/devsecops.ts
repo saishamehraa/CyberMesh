@@ -195,26 +195,46 @@ app.get('/admin', (req, res) => {
       analysisResult = JSON.parse(response.response.text());
     } catch (googleError) {
       console.warn('[DevSecOps] Native Gemini API failed or key missing. Cascading to OpenRouter fallback...', googleError);
-      if (!process.env.OPENROUTER_API_KEY) throw new Error('Both Native Gemini and OpenRouter fallback failed (No API keys)');
-      
-      const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://cybermesh.dev',
-          'X-Title': 'CyberMesh',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-lite-001',
-          messages: [{ role: 'user', content: prompt }],
-          response_format: { type: 'json_object' }
-        })
-      });
+      try {
+        if (!process.env.OPENROUTER_API_KEY) throw new Error('No OpenRouter API key');
+        
+        const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://cybermesh.dev',
+            'X-Title': 'CyberMesh',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.0-flash-lite-001',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' }
+          })
+        });
 
-      if (!openRouterResponse.ok) throw new Error(`OpenRouter Error: ${openRouterResponse.statusText}`);
-      const data = await openRouterResponse.json();
-      analysisResult = JSON.parse(data.choices[0].message.content);
+        if (!openRouterResponse.ok) throw new Error(`OpenRouter Error: ${openRouterResponse.statusText}`);
+        const data = await openRouterResponse.json();
+        analysisResult = JSON.parse(data.choices[0].message.content);
+      } catch (openRouterError) {
+        console.warn('[DevSecOps] OpenRouter fallback failed. Cascading to local Ollama fallback...', openRouterError);
+        const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+        
+        const ollamaResponse = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'gemma2',
+            messages: [{ role: 'user', content: prompt }],
+            stream: false,
+            format: 'json'
+          })
+        });
+
+        if (!ollamaResponse.ok) throw new Error(`Ollama Error: ${ollamaResponse.statusText}`);
+        const data = await ollamaResponse.json();
+        analysisResult = JSON.parse(data.message.content);
+      }
     }
     
     // 3. Parse and Broadcast

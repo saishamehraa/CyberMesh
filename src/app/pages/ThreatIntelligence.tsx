@@ -56,6 +56,13 @@ export function ThreatIntelligence() {
           ...newThreat, 
           publishedDate: new Date(newThreat.publishedDate || newThreat.published_date)
         };
+        // Avoid duplicate rendering
+        const existsIndex = prev.findIndex(t => t.cve === parsedThreat.cve);
+        if (existsIndex >= 0) {
+          const updated = [...prev];
+          updated[existsIndex] = parsedThreat;
+          return updated;
+        }
         return [parsedThreat, ...prev].slice(0, 12);
       });
     };
