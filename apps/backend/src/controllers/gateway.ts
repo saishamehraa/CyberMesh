@@ -38,7 +38,7 @@ async function callOpenRouter(prompt: string): Promise<any> {
     },
     body: JSON.stringify({
       // Primary ultra-fast model, with automatic fallback to 2.5-flash-lite via OpenRouter routing if needed
-      model: 'google/gemini-2.0-flash-lite-001',
+      model: 'google/gemini-2.5-flash-lite',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: prompt }
@@ -46,7 +46,7 @@ async function callOpenRouter(prompt: string): Promise<any> {
       response_format: { type: 'json_object' }
     }),
     // 5-second timeout for the primary cloud API
-    signal: AbortSignal.timeout(5000) 
+    signal: AbortSignal.timeout(5000)
   });
 
   if (!response.ok) throw new Error(`OpenRouter Error: ${response.statusText}`);
@@ -56,10 +56,10 @@ async function callOpenRouter(prompt: string): Promise<any> {
 
 async function callOllamaFallback(prompt: string): Promise<any> {
   console.log('[Gateway] Triggering Ollama fallback...');
-  
+
   let OLLAMA_API_URL = (process.env.OLLAMA_API_URL || 'http://localhost:11434').trim();
   OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
-  
+
   // Auto-detect an available local model
   const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
     headers: { 'ngrok-skip-browser-warning': '1' }
@@ -71,18 +71,18 @@ async function callOllamaFallback(prompt: string): Promise<any> {
   if (!tagsData.models || tagsData.models.length === 0) {
     throw new Error('Ollama Error: No models found. Please pull a model (e.g., `ollama pull llama3`).');
   }
-  
+
   // Prioritize gemma2 or llama3, otherwise pick the first one
   const modelNames = tagsData.models.map((m: any) => m.name);
-  const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) || 
-                        modelNames.find((m: string) => m.includes('llama3')) || 
-                        modelNames[0];
-                        
+  const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) ||
+    modelNames.find((m: string) => m.includes('llama3')) ||
+    modelNames[0];
+
   console.log(`[Gateway] Using local model: ${selectedModel}`);
 
   const response = await fetch(`${OLLAMA_API_URL}/api/generate`, {
     method: 'POST',
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       'ngrok-skip-browser-warning': '1'
     },
@@ -98,7 +98,7 @@ async function callOllamaFallback(prompt: string): Promise<any> {
     const errBody = await response.text();
     throw new Error(`Ollama Error: ${response.statusText} - ${errBody}`);
   }
-  
+
   const data = await response.json();
   return JSON.parse(data.response);
 }
@@ -145,9 +145,9 @@ export const analyzePrompt = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('[Gateway] FATAL ERROR: All AI analysis layers failed.', error);
     // Hard fail-safe: if all AI fails, block the request in a security context
-    return res.status(500).json({ 
-      risk: 'BLOCKED', 
-      score: 100, 
+    return res.status(500).json({
+      risk: 'BLOCKED',
+      score: 100,
       threats: [{ type: 'System Failure', severity: 'high', description: 'AI Firewall offline. Request blocked by default.' }]
     });
   }

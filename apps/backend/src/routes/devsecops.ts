@@ -70,13 +70,13 @@ async function fetchGithubRepoData(repoUrl: string) {
   }
 
   // 3. Filter for valid source files and package.json
-  const sourceFiles = treeData.tree.filter((file: any) => 
-    file.type === 'blob' && 
-    (file.path.endsWith('.ts') || 
-     file.path.endsWith('.tsx') || 
-     file.path.endsWith('.js') || 
-     file.path.endsWith('package.json')) &&
-    !file.path.includes('node_modules') && 
+  const sourceFiles = treeData.tree.filter((file: any) =>
+    file.type === 'blob' &&
+    (file.path.endsWith('.ts') ||
+      file.path.endsWith('.tsx') ||
+      file.path.endsWith('.js') ||
+      file.path.endsWith('package.json')) &&
+    !file.path.includes('node_modules') &&
     !file.path.includes('dist')
   );
 
@@ -105,8 +105,8 @@ async function fetchGithubRepoData(repoUrl: string) {
             vulnerabilities: 0,
             severity: 'NONE'
           }));
-        } catch (e) { 
-          console.error("Failed to parse package.json", e); 
+        } catch (e) {
+          console.error("Failed to parse package.json", e);
         }
         fileCount++;
       } else {
@@ -186,7 +186,7 @@ app.get('/admin', (req, res) => {
 
     try {
       if (!process.env.GEMINI_API_KEY) throw new Error('No GEMINI_API_KEY provided');
-      const model = genAI.getGenerativeModel({ 
+      const model = genAI.getGenerativeModel({
         model: "gemini-1.5-pro",
         generationConfig: { responseMimeType: "application/json" }
       });
@@ -197,7 +197,7 @@ app.get('/admin', (req, res) => {
       console.warn('[DevSecOps] Native Gemini API failed or key missing. Cascading to OpenRouter fallback...', googleError);
       try {
         if (!process.env.OPENROUTER_API_KEY) throw new Error('No OpenRouter API key');
-        
+
         const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -207,7 +207,7 @@ app.get('/admin', (req, res) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-lite-001',
+            model: 'google/gemini-2.5-flash-lite',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: 'json_object' }
           })
@@ -218,10 +218,10 @@ app.get('/admin', (req, res) => {
         analysisResult = JSON.parse(data.choices[0].message.content);
       } catch (openRouterError) {
         console.warn('[DevSecOps] OpenRouter fallback failed. Cascading to local Ollama fallback...', openRouterError);
-        
+
         let OLLAMA_API_URL = (process.env.OLLAMA_API_URL || 'http://localhost:11434').trim();
         OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
-        
+
         // Auto-detect an available local model
         const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
           headers: { 'ngrok-skip-browser-warning': '1' }
@@ -233,16 +233,16 @@ app.get('/admin', (req, res) => {
         if (!tagsData.models || tagsData.models.length === 0) {
           throw new Error('Ollama Error: No models found. Please pull a model (e.g., `ollama pull llama3`).');
         }
-        
+
         // Prioritize gemma2 or llama3, otherwise pick the first one
         const modelNames = tagsData.models.map((m: any) => m.name);
-        const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) || 
-                              modelNames.find((m: string) => m.includes('llama3')) || 
-                              modelNames[0];
+        const selectedModel = modelNames.find((m: string) => m.includes('gemma2')) ||
+          modelNames.find((m: string) => m.includes('llama3')) ||
+          modelNames[0];
 
         const ollamaResponse = await fetch(`${OLLAMA_API_URL}/api/generate`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'ngrok-skip-browser-warning': '1'
           },
@@ -258,16 +258,16 @@ app.get('/admin', (req, res) => {
           const errBody = await ollamaResponse.text();
           throw new Error(`Ollama Error: ${ollamaResponse.statusText} - ${errBody}`);
         }
-        
+
         const data = await ollamaResponse.json();
         // Ollama /api/generate puts the output in the `response` field
         analysisResult = JSON.parse(data.response);
       }
     }
-    
+
     // 3. Parse and Broadcast
-    const finalPayload = { 
-      status: 'complete', 
+    const finalPayload = {
+      status: 'complete',
       files: fileCount,
       vulnerabilities: analysisResult.vulnerabilities || [],
       dependencies: dependencies
@@ -275,12 +275,12 @@ app.get('/admin', (req, res) => {
 
     // Emit live events to Orchestrator based on ACTUAL findings
     const hasCritical = analysisResult.vulnerabilities.some((v: any) => v.severity === 'CRITICAL');
-    
+
     io.emit('agent_event', {
       id: Date.now().toString(),
       type: hasCritical ? 'error' : 'success',
       agent: 'DevSecOps Agent',
-      message: hasCritical 
+      message: hasCritical
         ? `AST Analysis complete. Critical code vulnerabilities detected in live repo.`
         : `Repository scan complete. Codebase appears secure.`,
       timestamp: new Date()
