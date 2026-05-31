@@ -57,6 +57,9 @@ async function callOpenRouter(prompt: string): Promise<any> {
 async function callOllamaFallback(prompt: string): Promise<any> {
   console.log('[Gateway] Triggering Ollama fallback...');
   
+  let OLLAMA_API_URL = (process.env.OLLAMA_API_URL || 'http://localhost:11434').trim();
+  OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
+  
   // Auto-detect an available local model
   const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
     headers: { 'ngrok-skip-browser-warning': '1' }

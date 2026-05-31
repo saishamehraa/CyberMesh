@@ -218,7 +218,9 @@ app.get('/admin', (req, res) => {
         analysisResult = JSON.parse(data.choices[0].message.content);
       } catch (openRouterError) {
         console.warn('[DevSecOps] OpenRouter fallback failed. Cascading to local Ollama fallback...', openRouterError);
-        const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+        
+        let OLLAMA_API_URL = (process.env.OLLAMA_API_URL || 'http://localhost:11434').trim();
+        OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
         
         // Auto-detect an available local model
         const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
