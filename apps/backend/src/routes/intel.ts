@@ -109,43 +109,55 @@ router.post('/analyze-dependencies', async (req: Request, res: Response) => {
   }
 });
 
-// Endpoint for Hackathon Demo
+// Endpoint for "Force Agent Sync" button
 router.post('/simulate', async (req: Request, res: Response) => {
   const io = (req as any).io;
   
   const lastScan = (global as any).lastScannedRepo;
 
-  const threatData = {
-    cve: `CVE-${new Date().getFullYear()}-99999`, // Fixed CVE to prevent infinite duplication
-    severity: 'CRITICAL',
-    title: 'Zero-day remote code execution vulnerability detected in memory allocator',
-    affected_package: 'node-gyp@9.3.1',
-    published_date: new Date().toISOString(),
-    cvss: 9.8
-  };
+  if (!lastScan || !lastScan.vulnerabilities || lastScan.vulnerabilities.length === 0) {
+    return res.json({ success: true, message: 'No vulnerabilities found in the last repo scan to sync.' });
+  }
 
+  let syncedCount = 0;
+  
   try {
-    const { data: savedThreat, error } = await supabase
-      .from('threats')
-      .upsert(threatData, { onConflict: 'cve' })
-      .select()
-      .single();
+    for (let i = 0; i < lastScan.vulnerabilities.length; i++) {
+      const vuln = lastScan.vulnerabilities[i];
+      
+      const threatData = {
+        // Generate a unique ID for this AST vulnerability
+        cve: `AST-VULN-${i}-${Date.now().toString().slice(-4)}`,
+        severity: vuln.severity,
+        title: `[Code Sec] ${vuln.title}`,
+        affected_package: `${vuln.file} (Line ${vuln.line || '?'})`,
+        published_date: new Date().toISOString(),
+        cvss: vuln.severity === 'CRITICAL' ? 9.8 : vuln.severity === 'HIGH' ? 8.1 : 5.0
+      };
 
-    if (error) throw error;
+      const { data: savedThreat, error } = await supabase
+        .from('threats')
+        .upsert(threatData, { onConflict: 'cve' })
+        .select()
+        .single();
 
-    io.emit('new_cve_threat', savedThreat);
-    io.emit('agent_event', {
-      id: savedThreat.id,
-      type: 'error',
-      agent: 'Intel Agent',
-      message: `[MOCK ALERT] Active exploit found: ${savedThreat.affected_package} (${savedThreat.cve})`,
-      timestamp: new Date().toISOString()
-    });
+      if (!error && savedThreat) {
+        syncedCount++;
+        io.emit('new_cve_threat', savedThreat);
+        io.emit('agent_event', {
+          id: savedThreat.id,
+          type: savedThreat.severity === 'CRITICAL' ? 'error' : 'warning',
+          agent: 'DevSecOps Agent',
+          message: `Synced AST vulnerability to Threat DB: ${savedThreat.title}`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
 
-    res.json({ success: true, threat: savedThreat });
+    res.json({ success: true, synced: syncedCount });
   } catch (err) {
-    console.error('[Intel Agent] Simulation DB Error:', err);
-    res.status(500).json({ error: 'Failed to simulate threat' });
+    console.error('[Intel Agent] Sync DB Error:', err);
+    res.status(500).json({ error: 'Failed to sync repo vulnerabilities' });
   }
 });
 
