@@ -225,7 +225,7 @@ app.get('/admin', (req, res) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'google/gemma-2-9b-it:free',
+            model: 'google/gemini-2.0-flash-lite-001',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: 'json_object' }
           }),

@@ -30,7 +30,7 @@ Respond ONLY with raw JSON. Do not use markdown blocks like \`\`\`json.`;
 
 async function callNativeGemini(prompt: string): Promise<any> {
   if (!process.env.GEMINI_API_KEY) throw new Error('No GEMINI_API_KEY provided');
-  
+
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: { responseMimeType: "application/json" },
@@ -57,7 +57,7 @@ async function callOpenRouter(prompt: string): Promise<any> {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'google/gemma-2-9b-it:free',
+      model: 'google/gemini-2.0-flash-lite-001',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: prompt }
