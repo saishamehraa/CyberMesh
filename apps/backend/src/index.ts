@@ -4,15 +4,16 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config();
+
 import gatewayRoutes from './routes/gateway';
 import intelRoutes from './routes/intel';
 import devsecopsRoutes from './routes/devsecops';
 import runtimeRoutes from './routes/runtime';
 import orchestrationRoutes from './routes/orchestration';
 import deploymentRoutes from './routes/deployment';
-import path from 'path';
-
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
