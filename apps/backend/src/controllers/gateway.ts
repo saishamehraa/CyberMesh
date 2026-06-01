@@ -57,7 +57,7 @@ async function callOpenRouter(prompt: string): Promise<any> {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+      model: 'google/gemma-2-9b-it:free',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: prompt }

@@ -14,7 +14,7 @@ Built for the **Google Cloud Rapid Agent Hackathon**.
 
 ## Built With
 
-- Gemini 1.5 Pro
+- Gemini 2.5 Pro
 - Google Cloud Agent Builder
 - Dynatrace MCP
 - Supabase Realtime
@@ -66,7 +66,7 @@ to autonomously correlate risks, reason about operational impact, and prevent un
 ## Features
 
 - 🛡️ **AI Gateway Agent:** Real-time semantic firewall protecting LLMs against prompt injections and jailbreaks using OpenRouter (Gemini Flash) with local Ollama fallback.
-- 🔬 **DevSecOps Agent:** Autonomous repository scanning. Feeds live GitHub source code and package manifests to **Gemini 1.5 Pro** for deep semantic vulnerability analysis.
+- 🔬 **DevSecOps Agent:** Autonomous repository scanning. Feeds live GitHub source code and package manifests to **Gemini 2.5 Pro** for deep semantic vulnerability analysis.
 - 🚨 **Threat Intelligence Agent:** Live Zero-Day threat tracking. Cross-references dependencies found by the DevSecOps Agent against the **OSV.dev** (Open Source Vulnerabilities) API.
 - 📡 **Runtime Intelligence Engine:** Correlates live Dynatrace observability telemetry with vulnerabilities and deployment risks to autonomously detect operational threats in production systems.
 - 🧠 **Nexus Orchestrator:** The autonomous orchestration engine. Aggregates telemetry from all agents to compute a global risk score, automatically blocking CI/CD pipelines in the **Deployment Center** if critical thresholds are breached.
@@ -107,7 +107,7 @@ CyberMesh is built around:
 - Node.js / Express
 - Socket.io (Real-time Event Mesh)
 - **Supabase (PostgreSQL)** (Database and Event Persistence)
-- @google/generative-ai SDK (Gemini 1.5 Pro)
+- @google/generative-ai SDK (Gemini 2.5 Pro)
 
 ## Getting Started
 
@@ -173,7 +173,7 @@ CyberMesh relies on three concurrently running services:
 To demonstrate the full power of CyberMesh during a pitch:
 
 1. **Initiate Deployment:** Go to the Deployment Center and click "Initiate Production Release". Watch it enter a pending state.
-2. **Scan Repository:** Go to Repository Security, paste a vulnerable GitHub URL (e.g., one containing `jsonwebtoken`), and click Scan. Watch Gemini 1.5 Pro parse the AST live.
+2. **Scan Repository:** Go to Repository Security, paste a vulnerable GitHub URL (e.g., one containing `jsonwebtoken`), and click Scan. Watch Gemini 2.5 Pro parse the AST live.
 3. **Intel Handoff:** Watch as the DevSecOps agent silently passes the discovered dependencies to the Threat Intelligence Agent, which queries OSV.dev and populates the Threat Intelligence feed with live CVEs.
 4. **The Block:** Watch the Autonomous Operations map glow red. The Nexus Orchestrator will calculate the critical risk and instantly snap your pending deployment into a **BLOCKED** state.
 

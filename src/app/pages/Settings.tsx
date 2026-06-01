@@ -203,7 +203,7 @@ export function Settings() {
               <label className="text-sm text-muted-foreground mb-2 block">Primary Model</label>
               <select className="w-full px-3 py-2 bg-input-background border border-border rounded-lg">
                 <option>Gemini 2.0 Flash</option>
-                <option>Gemini 1.5 Pro</option>
+                <option>Gemini 2.5 Pro</option>
                 <option>Claude 3.5 Sonnet</option>
               </select>
             </div>

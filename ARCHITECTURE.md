@@ -20,7 +20,7 @@ graph TD
     end
 
     Gateway -.-> |OpenRouter / Ollama| LLM1[LLM Analysis]
-    DevSecOps -.-> |Gemini 1.5 Pro| LLM2[AST Analysis]
+    DevSecOps -.-> |Gemini 2.5 Pro| LLM2[AST Analysis]
     Intel -.-> |OSV.dev API| DB[Threat Feeds]
     Runtime -.-> |Dynatrace Webhooks| Infra[Production Infrastructure]
 

@@ -69,7 +69,7 @@ export function RepositorySecurity() {
       }
 
       setScanResult(data);
-      
+
       if (data.dependencies && data.dependencies.length > 0) {
         // Fire and forget - let the Intel Agent do its job in the background!
         fetch('/api/intel/analyze-dependencies', {
@@ -101,7 +101,7 @@ export function RepositorySecurity() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Repository Security</h1>
         <p className="text-muted-foreground">
-          Autonomous DevSecOps scanning and AST vulnerability analysis via Gemini 1.5 Pro
+          Autonomous DevSecOps scanning and AST vulnerability analysis via Gemini 2.5 Pro
         </p>
       </div>
 
@@ -117,10 +117,10 @@ export function RepositorySecurity() {
             <p className="text-muted-foreground mb-6">
               Enter a public GitHub repository URL to initiate a live semantic security scan.
             </p>
-            
+
             <div className="flex gap-3 max-w-md mx-auto mb-4">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="https://github.com/owner/repo"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
@@ -134,7 +134,7 @@ export function RepositorySecurity() {
                 Scan
               </button>
             </div>
-            
+
             {scanError && (
               <p className="text-destructive text-sm mt-2">{scanError}</p>
             )}
@@ -268,7 +268,7 @@ export function RepositorySecurity() {
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="font-semibold mb-4">Dependency Analysis</h3>
             {(!scanResult.dependencies || scanResult.dependencies.length === 0) ? (
-               <p className="text-sm text-muted-foreground">No dependencies parsed.</p>
+              <p className="text-sm text-muted-foreground">No dependencies parsed.</p>
             ) : (
               <div className="space-y-3">
                 {scanResult.dependencies.map((dep, index) => (
