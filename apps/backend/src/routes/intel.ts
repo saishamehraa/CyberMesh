@@ -99,45 +99,7 @@ router.post('/analyze-dependencies', async (req: Request, res: Response) => {
       }
     }
 
-    // HACKATHON DEMO FALLBACK: 
-    // If OSV.dev didn't find any real CVEs for the parsed packages, we inject 
-    // mock CVEs so the dashboard telemetry ALWAYS populates during the live demo!
-    if (newThreatsDetected.length === 0) {
-      console.log('[Intel Agent] No real CVEs found, injecting simulated demo threats...');
-      const demoThreats = [
-        {
-          cve: `CVE-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000) + 10000}`,
-          severity: 'CRITICAL',
-          title: 'Remote Code Execution in AST parser dependency',
-          affected_package: dependencies[0]?.name ? `${dependencies[0].name}@1.0.4` : 'parse5@6.0.1',
-          published_date: new Date().toISOString(),
-          cvss: 9.8
-        },
-        {
-          cve: `CVE-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000) + 10000}`,
-          severity: 'HIGH',
-          title: 'Prototype Pollution vulnerability detected',
-          affected_package: dependencies[1]?.name ? `${dependencies[1].name}@2.1.0` : 'lodash@4.17.20',
-          published_date: new Date(Date.now() - 86400000).toISOString(),
-          cvss: 8.2
-        }
-      ];
 
-      for (const dt of demoThreats) {
-        const { data: savedThreat } = await supabase.from('threats').upsert(dt, { onConflict: 'cve' }).select().single();
-        if (savedThreat) {
-          newThreatsDetected.push(savedThreat);
-          io.emit('new_cve_threat', savedThreat);
-          io.emit('agent_event', {
-            id: savedThreat.id,
-            type: savedThreat.severity === 'CRITICAL' ? 'error' : 'warning',
-            agent: 'Intel Agent',
-            message: `[Intel Mesh] Simulated exploit found in dependency: ${savedThreat.affected_package} (${dt.cve})`,
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
-    }
 
     res.json({ success: true, threatsFound: newThreatsDetected.length, details: newThreatsDetected });
 
@@ -152,9 +114,6 @@ router.post('/simulate', async (req: Request, res: Response) => {
   const io = (req as any).io;
   
   const lastScan = (global as any).lastScannedRepo;
-  if (lastScan && !lastScan.hasCritical && (!lastScan.vulnerabilities || lastScan.vulnerabilities.length === 0)) {
-    return res.json({ success: true, message: 'Repo scan is clean, no threats to sync.' });
-  }
 
   const threatData = {
     cve: `CVE-${new Date().getFullYear()}-99999`, // Fixed CVE to prevent infinite duplication

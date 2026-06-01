@@ -28,7 +28,8 @@ socket.on('agent_event', (event: any) => {
   } else if (event.type === 'warning') {
     securityScore = Math.max(0, securityScore - 10);
   } else if (event.type === 'success') {
-    securityScore = Math.min(100, securityScore + 5);
+    // Reset back to 100 when a clean scan completes
+    securityScore = 100;
   }
 
   console.log(`Current Composite Security Score: ${securityScore}`);
