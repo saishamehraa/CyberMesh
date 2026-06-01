@@ -1,4 +1,3 @@
-// apps/backend/src/controllers/gateway.ts
 import { Request, Response } from 'express';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;

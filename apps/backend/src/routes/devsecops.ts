@@ -1,6 +1,6 @@
 // apps/backend/src/routes/devsecops.ts
 import { Router, Request, Response } from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 const router = Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -188,7 +188,25 @@ app.get('/admin', (req, res) => {
       if (!process.env.GEMINI_API_KEY) throw new Error('No GEMINI_API_KEY provided');
       const model = genAI.getGenerativeModel({
         model: "gemini-1.5-pro",
-        generationConfig: { responseMimeType: "application/json" }
+        generationConfig: { responseMimeType: "application/json" },
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          }
+        ]
       });
       console.log('[DevSecOps] Initiating AST Analysis on live code via native Gemini 1.5 Pro...');
       const response = await model.generateContent(prompt);
