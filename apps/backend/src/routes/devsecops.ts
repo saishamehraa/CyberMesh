@@ -187,7 +187,7 @@ app.get('/admin', (req, res) => {
     try {
       if (!process.env.GEMINI_API_KEY) throw new Error('No GEMINI_API_KEY provided');
       const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-pro",
+        model: "gemini-2.5-pro",
         generationConfig: { responseMimeType: "application/json" },
         safetySettings: [
           {
@@ -208,7 +208,7 @@ app.get('/admin', (req, res) => {
           }
         ]
       });
-      console.log('[DevSecOps] Initiating AST Analysis on live code via native Gemini 1.5 Pro...');
+      console.log('[DevSecOps] Initiating AST Analysis on live code via native Gemini 2.5 Pro...');
       const response = await model.generateContent(prompt);
       analysisResult = JSON.parse(response.response.text());
     } catch (googleError) {
