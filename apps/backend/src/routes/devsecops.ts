@@ -228,7 +228,8 @@ app.get('/admin', (req, res) => {
             model: 'google/gemma-2-9b-it:free',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: 'json_object' }
-          })
+          }),
+          signal: AbortSignal.timeout(30000)
         });
 
         if (!openRouterResponse.ok) throw new Error(`OpenRouter Error: ${openRouterResponse.statusText}`);
@@ -240,9 +241,10 @@ app.get('/admin', (req, res) => {
         let OLLAMA_API_URL = (process.env.OLLAMA_API_URL || 'http://localhost:11434').trim();
         OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
 
-        // Auto-detect an available local model
+        // Auto-detect an available local model with a strict 5-second timeout so we don't hang if ngrok is dead
         const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
-          headers: { 'ngrok-skip-browser-warning': '1' }
+          headers: { 'ngrok-skip-browser-warning': '1' },
+          signal: AbortSignal.timeout(5000)
         });
         if (!tagsResponse.ok) {
           throw new Error(`Ollama API Unreachable: ${tagsResponse.statusText}`);

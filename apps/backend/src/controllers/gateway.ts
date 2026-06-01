@@ -79,7 +79,8 @@ async function callOllamaFallback(prompt: string): Promise<any> {
   OLLAMA_API_URL = OLLAMA_API_URL.replace(/\/v1\/?$/, '').replace(/\/$/, '');
 
   const tagsResponse = await fetch(`${OLLAMA_API_URL}/api/tags`, {
-    headers: { 'ngrok-skip-browser-warning': '1' }
+    headers: { 'ngrok-skip-browser-warning': '1' },
+    signal: AbortSignal.timeout(5000)
   });
   if (!tagsResponse.ok) {
     throw new Error(`Ollama API Unreachable: ${tagsResponse.statusText}`);
